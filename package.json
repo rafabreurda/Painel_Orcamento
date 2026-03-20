@@ -1,0 +1,13 @@
+{
+  "name": "neuroflux-mold-enterprise",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "vercel-build": "cd frontend && npm install && npm run build && cd ../backend && npm install && npx prisma generate && npx prisma db push && npx tsx src/seed.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.1",
+    "@types/node": "^20.11.19"
+  }
+}

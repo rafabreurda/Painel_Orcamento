@@ -1,0 +1,14 @@
+{
+  "name": "NeuroFlux Mold Enterprise",
+  "short_name": "NF Mold",
+  "description": "Sistema de orçamentos para moldes e matrizes",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    { "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

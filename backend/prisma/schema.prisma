@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String  @id @default(cuid())
+  username    String  @unique
+  name        String
+  password    String
+  role        String  @default("ENGINEER")
+  isActive    Boolean @default(true)
+  avatarColor String  @default("#3b82f6")
+
+  defaultRiskMargin   Float  @default(15)
+  defaultProfitMargin Float  @default(20)
+  defaultTaxRate      Float  @default(8)
+  defaultSteelType    String @default("P20")
+  defaultPolishLevel  String @default("STANDARD")
+  defaultCavities     Int    @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects Project[]
+
+  @@map("users")
+}
+
+model PricingTable {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  label     String
+  value     Float
+  unit      String
+  updatedAt DateTime @updatedAt
+
+  @@map("pricing_table")
+}
+
+model Project {
+  id         String  @id @default(cuid())
+  name       String
+  clientName String
+  status     String  @default("PENDING")
+  imageUrl   String?
+
+  pieceX      Float
+  pieceY      Float
+  pieceZ      Float
+  cavities    Int     @default(1)
+  hasDrawers  Boolean @default(false)
+  drawerCount Int     @default(0)
+  polishLevel String  @default("STANDARD")
+  steelType   String  @default("P20")
+
+  riskMargin   Float @default(15)
+  profitMargin Float @default(20)
+  taxRate      Float @default(8)
+
+  totalMaterial  Float?
+  totalLabor     Float?
+  totalProject   Float?
+  laborBreakdown String?
+
+  createdBy User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("projects")
+}
