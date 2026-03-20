@@ -1,0 +1,6 @@
+node_modules
+dist
+*.env.local
+backend/uploads/
+frontend/dist/
+backend/node_modules/

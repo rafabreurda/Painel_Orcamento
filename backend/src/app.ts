@@ -8,6 +8,7 @@ import { projectRoutes } from './routes/projects'
 import { pricingRoutes } from './routes/pricing'
 import { exportRoutes } from './routes/exports'
 import { adminRoutes } from './routes/admin'
+import { visionRoutes } from './routes/vision'
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({
@@ -47,6 +48,7 @@ export function buildApp(): FastifyInstance {
   app.register(pricingRoutes, { prefix: '/api/pricing' })
   app.register(exportRoutes,  { prefix: '/api/exports' })
   app.register(adminRoutes,   { prefix: '/api/admin' })
+  app.register(visionRoutes,  { prefix: '/api/vision' })
 
   return app
 }
