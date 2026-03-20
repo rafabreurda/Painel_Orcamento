@@ -85,7 +85,7 @@ export async function projectRoutes(app: FastifyInstance) {
     const { id } = req.params as { id: string }
     const project = await prisma.project.findUnique({
       where: { id },
-      include: { createdBy: { select: { name: true, email: true } } },
+      include: { createdBy: { select: { name: true, username: true } } },
     })
     if (!project) return reply.status(404).send({ error: 'Projeto não encontrado' })
     return project
