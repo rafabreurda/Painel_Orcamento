@@ -3,15 +3,13 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" }
+    { "source": "/api/:path*", "destination": "/api/index" }
   ],
   "functions": {
     "api/index.ts": {
       "memory": 1024,
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "backend/**"
     }
-  },
-  "env": {
-    "NODE_ENV": "production"
   }
 }
