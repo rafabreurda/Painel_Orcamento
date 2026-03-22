@@ -2,10 +2,6 @@ import { FastifyInstance } from 'fastify'
 import Anthropic from '@anthropic-ai/sdk'
 import { authenticate } from '../middleware/auth'
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
-
 const ANALYSIS_PROMPT = `Você é um engenheiro especialista em moldes de injeção plástica com 30 anos de experiência.
 
 Analise a foto desta peça plástica e retorne um JSON com as seguintes informações (sem markdown, apenas o JSON puro):
@@ -36,56 +32,93 @@ Analise a foto desta peça plástica e retorne um JSON com as seguintes informa�
 
 Seja preciso e técnico. Estime as dimensões usando referências visuais (mão, caneta, papel, etc.) se visíveis na foto.`
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] as const
+
 export async function visionRoutes(app: FastifyInstance) {
   app.addHook('preHandler', authenticate)
 
   // POST /api/vision/analyze
   app.post('/analyze', async (req, reply) => {
     const data = await req.file()
-    if (!data) return reply.status(400).send({ error: 'Nenhuma imagem enviada' })
+    if (!data) return reply.status(400).send({ error: 'Nenhum arquivo enviado' })
 
     const buffer = await data.toBuffer()
-    const base64 = buffer.toString('base64')
-    const mediaType = (data.mimetype as any) || 'image/jpeg'
+    const mimeType = data.mimetype || 'image/jpeg'
+    const isPdf = mimeType === 'application/pdf'
 
     if (!process.env.ANTHROPIC_API_KEY) {
-      // Modo demo — retorna análise heurística
       return getDemoAnalysis()
     }
 
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
     try {
-      const message = await client.messages.create({
-        model: 'claude-opus-4-6',
-        max_tokens: 1024,
-        messages: [
+      let messageContent: Anthropic.MessageParam['content']
+
+      if (isPdf) {
+        messageContent = [
           {
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: mediaType,
-                  data: base64,
-                },
-              },
-              {
-                type: 'text',
-                text: ANALYSIS_PROMPT,
-              },
-            ],
+            type: 'document',
+            source: {
+              type: 'base64',
+              media_type: 'application/pdf',
+              data: buffer.toString('base64'),
+            },
+          } as any,
+          { type: 'text', text: ANALYSIS_PROMPT },
+        ]
+      } else {
+        const mediaType = ALLOWED_IMAGE_TYPES.includes(mimeType as any)
+          ? (mimeType as typeof ALLOWED_IMAGE_TYPES[number])
+          : 'image/jpeg'
+
+        messageContent = [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mediaType,
+              data: buffer.toString('base64'),
+            },
           },
-        ],
+          { type: 'text', text: ANALYSIS_PROMPT },
+        ]
+      }
+
+      const message = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: messageContent }],
       })
 
       const text = message.content[0].type === 'text' ? message.content[0].text : ''
-      // Remove possíveis markdown code blocks
-      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-      const analysis = JSON.parse(cleaned)
-      return { analysis, source: 'ai' }
+      let cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      const firstBrace = cleaned.indexOf('{')
+      const lastBrace = cleaned.lastIndexOf('}')
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        cleaned = cleaned.slice(firstBrace, lastBrace + 1)
+      }
+
+      let analysis: any
+      try {
+        analysis = JSON.parse(cleaned)
+      } catch (parseErr: any) {
+        console.error('[vision] JSON parse error:', parseErr.message, '| raw:', text.slice(0, 300))
+        return reply.status(503).send({
+          error: 'Resposta da IA em formato inválido. Tente novamente.',
+          code: 'PARSE_ERROR',
+          detail: parseErr.message,
+        })
+      }
+
+      return { analysis, source: isPdf ? 'ai_pdf' : 'ai' }
     } catch (err: any) {
-      console.error('Vision error:', err.message)
-      return { analysis: getDemoAnalysis().analysis, source: 'demo', warning: 'Análise IA indisponível — usando estimativa inteligente' }
+      console.error('[vision] Anthropic error:', err?.message, err?.status)
+      return reply.status(503).send({
+        error: 'Análise IA indisponível. Tente novamente.',
+        code: 'AI_UNAVAILABLE',
+        detail: err?.message ?? String(err),
+      })
     }
   })
 }

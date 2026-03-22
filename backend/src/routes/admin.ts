@@ -93,7 +93,6 @@ export async function adminRoutes(app: FastifyInstance) {
   // PATCH /api/admin/users/:id
   app.patch('/users/:id', async (req, reply) => {
     const { id } = req.params as { id: string }
-    const caller = req.user as { id: string }
 
     const body = updateUserSchema.parse(req.body)
     const data: any = { ...body }
@@ -107,7 +106,7 @@ export async function adminRoutes(app: FastifyInstance) {
   // DELETE /api/admin/users/:id
   app.delete('/users/:id', async (req, reply) => {
     const { id } = req.params as { id: string }
-    const caller = req.user as { id: string }
+    const caller = (req.user as { id: string })
 
     if (id === caller.id) return reply.status(400).send({ error: 'Você não pode se excluir' })
 

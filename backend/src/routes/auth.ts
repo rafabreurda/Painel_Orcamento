@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { PrismaClient } from '@prisma/client'
-import { authenticate, requireAdmin } from '../middleware/auth'
+import { authenticate } from '../middleware/auth'
 
 const prisma = new PrismaClient()
 
@@ -15,7 +15,6 @@ export async function authRoutes(app: FastifyInstance) {
   // POST /api/auth/login
   app.post('/login', async (req, reply) => {
     const body = loginSchema.parse(req.body)
-
     const user = await prisma.user.findUnique({ where: { username: body.username } })
     if (!user || !user.isActive) {
       return reply.status(401).send({ error: 'Usuário ou senha inválidos' })
@@ -26,11 +25,16 @@ export async function authRoutes(app: FastifyInstance) {
 
     const token = app.jwt.sign(
       { id: user.id, username: user.username, role: user.role, name: user.name },
-      { expiresIn: '10h' }
+      { expiresIn: '8h' }
+    )
+    const refreshToken = app.jwt.sign(
+      { id: user.id, type: 'refresh' },
+      { expiresIn: '30d' }
     )
 
     return {
       token,
+      refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -44,6 +48,30 @@ export async function authRoutes(app: FastifyInstance) {
         defaultPolishLevel:  user.defaultPolishLevel,
         defaultCavities:     user.defaultCavities,
       },
+    }
+  })
+
+  // POST /api/auth/refresh — renova access token silenciosamente
+  app.post('/refresh', async (req, reply) => {
+    const { refreshToken } = req.body as { refreshToken?: string }
+    if (!refreshToken) return reply.status(401).send({ error: 'Refresh token necessário' })
+
+    try {
+      const payload = app.jwt.verify(refreshToken) as { id: string; type: string }
+      if (payload.type !== 'refresh') {
+        return reply.status(401).send({ error: 'Token inválido' })
+      }
+      const user = await prisma.user.findUnique({ where: { id: payload.id } })
+      if (!user || !user.isActive) {
+        return reply.status(401).send({ error: 'Usuário não encontrado ou inativo' })
+      }
+      const accessToken = app.jwt.sign(
+        { id: user.id, username: user.username, role: user.role, name: user.name },
+        { expiresIn: '8h' }
+      )
+      return { accessToken }
+    } catch {
+      return reply.status(401).send({ error: 'Refresh token inválido ou expirado. Faça login novamente.' })
     }
   })
 
@@ -61,7 +89,7 @@ export async function authRoutes(app: FastifyInstance) {
     })
   })
 
-  // PATCH /api/auth/my-config  — cada usuário edita suas próprias configs
+  // PATCH /api/auth/my-config
   app.patch('/my-config', { preHandler: [authenticate] }, async (req) => {
     const payload = req.user as { id: string }
     const allowed = z.object({
@@ -89,12 +117,10 @@ export async function authRoutes(app: FastifyInstance) {
   app.patch('/change-password', { preHandler: [authenticate] }, async (req, reply) => {
     const payload = req.user as { id: string }
     const { currentPassword, newPassword } = req.body as { currentPassword: string; newPassword: string }
-
     const user = await prisma.user.findUnique({ where: { id: payload.id } })
     if (!user || !(await bcrypt.compare(currentPassword, user.password))) {
       return reply.status(400).send({ error: 'Senha atual incorreta' })
     }
-
     await prisma.user.update({
       where: { id: payload.id },
       data: { password: await bcrypt.hash(newPassword, 10) },

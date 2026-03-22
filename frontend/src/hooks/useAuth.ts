@@ -27,6 +27,7 @@ export function useAuth() {
     try {
       const { data } = await api.post('/auth/login', { username, password })
       localStorage.setItem('nf_token', data.token)
+      localStorage.setItem('nf_refresh_token', data.refreshToken)
       localStorage.setItem('nf_user', JSON.stringify(data.user))
       setUser(data.user)
       return data.user
@@ -37,6 +38,7 @@ export function useAuth() {
 
   function logout() {
     localStorage.removeItem('nf_token')
+    localStorage.removeItem('nf_refresh_token')
     localStorage.removeItem('nf_user')
     setUser(null)
   }

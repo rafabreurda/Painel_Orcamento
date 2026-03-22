@@ -4,3 +4,5 @@ dist
 backend/uploads/
 frontend/dist/
 backend/node_modules/
+videos
+videos/**

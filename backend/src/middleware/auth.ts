@@ -11,6 +11,6 @@ export async function authenticate(req: FastifyRequest, reply: FastifyReply) {
 export async function requireAdmin(req: FastifyRequest, reply: FastifyReply) {
   const user = req.user as { role: string }
   if (user.role !== 'ADMIN') {
-    reply.status(403).send({ error: 'Acesso restrito a administradores' })
+    return reply.status(403).send({ error: 'Acesso restrito a administradores' })
   }
 }

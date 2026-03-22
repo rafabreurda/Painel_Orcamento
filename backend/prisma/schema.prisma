@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -55,8 +56,12 @@ model Project {
   cavities    Int     @default(1)
   hasDrawers  Boolean @default(false)
   drawerCount Int     @default(0)
-  polishLevel String  @default("STANDARD")
-  steelType   String  @default("P20")
+  polishLevel     String  @default("STANDARD")
+  steelType       String  @default("P20")
+  heatTreatment   String  @default("NONE")   // NONE, NITRIDE, QUENCH_TEMPER, THROUGH_HARDEN
+  surfaceTexture  String  @default("POLISHED") // POLISHED, TEXTURED_VDI12, TEXTURED_VDI18, TEXTURED_VDI24, SANDBLASTED
+  injectionType   String  @default("camera_fria") // camera_fria | camera_quente
+  nozzleCount     Int     @default(0)
 
   riskMargin   Float @default(15)
   profitMargin Float @default(20)
@@ -72,5 +77,30 @@ model Project {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  history   ProjectHistory[]
+
   @@map("projects")
+}
+
+model ProjectHistory {
+  id           String   @id @default(cuid())
+  projectId    String
+  version      Int
+  snapshot     String   // JSON completo do projeto antes da edição
+  totalProject Float
+  changedBy    String   // nome do usuário (denormalizado)
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_history")
+}
+
+model SystemConfig {
+  key       String   @id
+  value     String   // JSON string
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
 }

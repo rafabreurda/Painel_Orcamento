@@ -8,3 +8,4 @@ backend/uploads/
 frontend/dist/
 .vercel/
 .vercel
+videos/

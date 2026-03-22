@@ -39,10 +39,10 @@ export default function Dashboard() {
   useEffect(() => {
     Promise.all([
       api.get('/projects/stats'),
-      api.get('/projects'),
+      api.get('/projects?limit=5'),
     ]).then(([s, p]) => {
       setStats(s.data)
-      setProjects(p.data.slice(0, 5))
+      setProjects(p.data.projects ?? p.data.slice?.(0, 5) ?? [])
     }).finally(() => setLoading(false))
   }, [])
 

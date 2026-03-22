@@ -9,6 +9,8 @@ import { pricingRoutes } from './routes/pricing'
 import { exportRoutes } from './routes/exports'
 import { adminRoutes } from './routes/admin'
 import { visionRoutes } from './routes/vision'
+import { historyRoutes } from './routes/history'
+import { configRoutes } from './routes/config'
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({
@@ -37,7 +39,7 @@ export function buildApp(): FastifyInstance {
   })
 
   app.register(multipart, {
-    limits: { fileSize: 20 * 1024 * 1024 },
+    limits: { fileSize: 4 * 1024 * 1024, files: 1 },
   })
 
   app.get('/health', async () => ({ status: 'ok', service: 'NeuroFlux Mold API' }))
@@ -45,10 +47,12 @@ export function buildApp(): FastifyInstance {
 
   app.register(authRoutes,    { prefix: '/api/auth' })
   app.register(projectRoutes, { prefix: '/api/projects' })
+  app.register(historyRoutes, { prefix: '/api/projects' })
   app.register(pricingRoutes, { prefix: '/api/pricing' })
   app.register(exportRoutes,  { prefix: '/api/exports' })
   app.register(adminRoutes,   { prefix: '/api/admin' })
   app.register(visionRoutes,  { prefix: '/api/vision' })
+  app.register(configRoutes,  { prefix: '/api/config' })
 
   return app
 }
