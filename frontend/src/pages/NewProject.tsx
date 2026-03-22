@@ -168,7 +168,7 @@ export default function NewProject() {
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <Sparkles size={22} className="text-primary-400" />
             NeuroFlux Orçamentos
-            <span className="text-[10px] bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded ml-2 border border-primary-500/30">v2.3-final</span>
+            <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded ml-2 border border-red-500/30 font-black animate-pulse">v2.6-ULTRA-FORCE</span>
           </h1>
           <p className="text-slate-400 text-sm mt-1">
             Tire uma foto do produto — a IA detecta tudo automaticamente
