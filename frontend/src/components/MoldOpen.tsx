@@ -369,7 +369,7 @@ export default function MoldOpen({
         <rect x={0} y={H - 20} width={W} height={20} fill="#1a3a5a" opacity="0.8"/>
         <text x={W/2} y={H - 8} textAnchor="middle" fill="#6090b8"
           fontSize={7} fontFamily="monospace">
-          EUROMOLDES · Simulação Técnica — não substitui projeto de engenharia
+          NEUROFLUX · Simulação Técnica — não substitui projeto de engenharia
         </text>
       </svg>
     </div>

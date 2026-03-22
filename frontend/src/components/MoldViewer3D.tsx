@@ -392,7 +392,7 @@ export default function MoldViewer3D({
         {/* Tag EUROMOLDES */}
         <div className="absolute bottom-4 right-4">
           <p className="text-white/15 text-[9px] tracking-[0.2em] font-mono uppercase select-none">
-            EUROMOLDES · NEUROFLUX
+            NEUROFLUX · MOLD ENTERPRISE
           </p>
         </div>
 

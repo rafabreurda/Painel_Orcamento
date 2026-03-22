@@ -36,7 +36,7 @@ export default function Login() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-600 to-primary-700 rounded-3xl mb-5 shadow-2xl shadow-primary-600/40">
             <Factory size={36} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">EUROMOLDES</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">NeuroFlux</h1>
           <p className="text-slate-400 text-sm mt-2">Sistema de Orçamentos Inteligentes</p>
         </div>
 
@@ -96,7 +96,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-xs text-slate-600 mt-6">
-          © 2024 Euromoldes · NeuroFlux Mold Enterprise
+          © 2024 NeuroFlux · Mold Enterprise
         </p>
       </div>
     </div>

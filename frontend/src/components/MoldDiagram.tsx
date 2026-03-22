@@ -475,7 +475,7 @@ export default function MoldDiagram({
         <rect x={12} y={H-22} width={W-24} height={14} fill="#0e2a4a" rx="2" opacity="0.92"/>
         <text x={W/2} y={H-12} textAnchor="middle"
           fill="#7ab0d8" fontSize={7.5} fontFamily="monospace" letterSpacing="1.5">
-          EUROMOLDES · FERRAMENTARIA DE PRECISÃO · NEUROFLUX MOLD ENTERPRISE
+          NEUROFLUX · FERRAMENTARIA DE PRECISÃO · MOLD ENTERPRISE
         </text>
       </svg>
     </div>
