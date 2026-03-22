@@ -46,7 +46,7 @@ export default function ProjectDetail() {
   const [statusSaving, setStatusSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [view, setView] = useState<'diagram' | '3d'>('3d')
+  const [view, setView] = useState<'diagram' | '3d'>('diagram')
   const [paymentTerms, setPaymentTerms] = useState<Array<{ label: string; pct: number }>>([
     { label: '40% — Assinatura', pct: 0.4 },
     { label: '30% — 1ª Amostra (T1)', pct: 0.3 },

@@ -88,25 +88,27 @@ export default function PhotoAnalyzer({ onAnalysis }: Props) {
 
   const compressImage = (file: File): Promise<{ blob: Blob; url: string }> => {
     return new Promise((resolve, reject) => {
-      // Timeout: if compression takes > 8s, reject
       const timeout = setTimeout(() => {
         reject(new Error('Timeout ao comprimir imagem'))
-      }, 8000)
+      }, 10000)
 
       const img = new Image()
       const objectUrl = URL.createObjectURL(file)
 
       img.onload = () => {
         try {
-          // Keep canvas small to avoid crashing mobile/desktop tabs
-          // 640px @ 0.65 produces ~80-250 KB — plenty for AI vision analysis
           const MAX = 640
           const QUALITY = 0.65
 
           let { width, height } = img
           if (width > MAX || height > MAX) {
-            if (width > height) { height = Math.round(height * MAX / width); width = MAX }
-            else { width = Math.round(width * MAX / height); height = MAX }
+            if (width > height) {
+              height = Math.round(height * MAX / width)
+              width = MAX
+            } else {
+              width = Math.round(width * MAX / height)
+              height = MAX
+            }
           }
 
           const canvas = document.createElement('canvas')
@@ -123,16 +125,14 @@ export default function PhotoAnalyzer({ onAnalysis }: Props) {
 
           canvas.toBlob(blob => {
             clearTimeout(timeout)
-            // Revoke original objectUrl only AFTER we have the compressed result
             URL.revokeObjectURL(objectUrl)
             if (blob) {
-              const dataUrl = canvas.toDataURL('image/jpeg', QUALITY)
+              const blobUrl = URL.createObjectURL(blob)
+              // Cleanup canvas memory
               canvas.width = 0
               canvas.height = 0
-              resolve({ blob, url: dataUrl })
+              resolve({ blob, url: blobUrl })
             } else {
-              canvas.width = 0
-              canvas.height = 0
               reject(new Error('Falha ao comprimir imagem'))
             }
           }, 'image/jpeg', QUALITY)
@@ -145,7 +145,7 @@ export default function PhotoAnalyzer({ onAnalysis }: Props) {
       img.onerror = () => {
         clearTimeout(timeout)
         URL.revokeObjectURL(objectUrl)
-        reject(new Error('Falha ao carregar imagem'))
+        reject(new Error('Falha ao carregar imagem para compressão'))
       }
       img.src = objectUrl
     })
@@ -156,7 +156,7 @@ export default function PhotoAnalyzer({ onAnalysis }: Props) {
     setError('')
     setIsPdfPreview(false)
 
-    // Revoke previous object URL to free memory
+    // Cleanup previous preview URL to prevent memory leaks
     if (prevObjectUrlRef.current) {
       URL.revokeObjectURL(prevObjectUrlRef.current)
       prevObjectUrlRef.current = null
@@ -166,7 +166,7 @@ export default function PhotoAnalyzer({ onAnalysis }: Props) {
 
     if (isPdf) {
       if (file.size > 10 * 1024 * 1024) {
-        setError('PDF muito grande (máx 10MB). Tente um arquivo menor.')
+        setError('PDF muito grande (máx 10MB).')
         return
       }
       setPreview(PDF_PREVIEW)
@@ -175,37 +175,27 @@ export default function PhotoAnalyzer({ onAnalysis }: Props) {
       return
     }
 
-    // Hard limit: reject files > 25MB immediately before canvas crashes the tab
-    if (file.size > 25 * 1024 * 1024) {
-      setError('Foto muito grande (máx 25MB). Use uma foto com menos de 25MB.')
+    // Reject very large files immediately before browser starts decoding them
+    if (file.size > 30 * 1024 * 1024) {
+      setError('Foto muito grande (máx 30MB). Use uma foto menor.')
       return
     }
 
-    // Image path: show temporary placeholder while compressing
-    const tempUrl = URL.createObjectURL(file)
-    prevObjectUrlRef.current = tempUrl
-    setPreview(tempUrl)
+    // Don't set preview yet to avoid loading the heavy source file in <img>
+    setAnalyzing(true)
 
     try {
-      const { blob, url: compressedUrl } = await compressImage(file)
-      const compressed = new File([blob], 'product.jpg', { type: 'image/jpeg' })
+      const { blob, url: blobUrl } = await compressImage(file)
+      const compressedFile = new File([blob], 'product.jpg', { type: 'image/jpeg' })
 
-      // Replace preview with compressed version; revoke the temp blob URL
-      if (prevObjectUrlRef.current === tempUrl) {
-        URL.revokeObjectURL(tempUrl)
-        prevObjectUrlRef.current = null
-      }
-      setPreview(compressedUrl)
+      prevObjectUrlRef.current = blobUrl
+      setPreview(blobUrl)
 
-      await runSteps(compressed, compressedUrl)
-    } catch (compressErr) {
-      // Compression failed — do NOT try with original (would crash browser)
-      URL.revokeObjectURL(tempUrl)
-      prevObjectUrlRef.current = null
+      await runSteps(compressedFile, blobUrl)
+    } catch (compressErr: any) {
       setPreview(null)
-      setError('Erro ao processar imagem. Tente uma foto menor ou tire uma nova foto.')
+      setError(compressErr.message || 'Erro ao processar imagem.')
       setAnalyzing(false)
-      return
     }
   }, [])
 

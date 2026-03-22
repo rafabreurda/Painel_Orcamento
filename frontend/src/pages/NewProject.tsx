@@ -83,8 +83,8 @@ export default function NewProject() {
   function applyAnalysis(a: MoldAnalysis, imgUrl: string) {
     setAnalysis(a)
     setImagePreview(imgUrl)
-    setActiveTab('3d')
-    // Functional update — garante que form atual (name, clientName, margens) é preservado
+    // REMOVIDO: setActiveTab('3d') — O usuário deve clicar manualmente para evitar travamentos
+    
     setForm(prev => {
       const next: FormData = {
         ...prev,
@@ -99,7 +99,6 @@ export default function NewProject() {
         injectionType: a.injectionType,
         nozzleCount: a.nozzleCount,
       }
-      // Dispara o cálculo com os valores novos
       setTimeout(() => runCalc(next), 0)
       return next
     })
@@ -113,22 +112,20 @@ export default function NewProject() {
     setSaving(true)
     try {
       const { data: res } = await api.post('/projects', form)
-      // Skip image upload if preview is a PDF placeholder or not a valid URL
-      if (imagePreview && imagePreview !== 'pdf' && imagePreview.startsWith('data:')) {
+      
+      // Upload image if present
+      if (imagePreview && imagePreview !== 'pdf') {
         try {
-          const blob = await (await fetch(imagePreview)).blob()
-          const fd = new FormData()
-          fd.append('file', blob, 'product.jpg')
-          await api.post(`/projects/${res.project.id}/image`, fd).catch(() => {})
-        } catch {}
-      } else if (imagePreview && imagePreview !== 'pdf' && !imagePreview.startsWith('data:')) {
-        try {
+          // fetch() works perfectly for both data: and blob: URLs
           const blob = await fetch(imagePreview).then(r => r.blob())
           const fd = new FormData()
           fd.append('file', blob, 'product.jpg')
           await api.post(`/projects/${res.project.id}/image`, fd)
-        } catch {}
+        } catch (err) {
+          console.error('Erro ao subir imagem:', err)
+        }
       }
+      
       toast('success', 'Orçamento criado!', `"${form.name}" salvo com sucesso.`)
       navigate(`/projects/${res.project.id}`)
     } catch (e: any) {
