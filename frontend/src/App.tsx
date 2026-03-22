@@ -3,7 +3,7 @@ import { lazy, Suspense } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { ToastContext, useToastState } from '@/hooks/useToast'
 import Login from '@/pages/Login'
-import Layout from '@/components/Layout'
+import MainLayout from '@/components/MainLayout'
 import Toaster from '@/components/Toaster'
 import { PWAInstallBanner } from '@/components/PWAInstallBanner'
 import { Loader2 } from 'lucide-react'
@@ -45,7 +45,7 @@ export default function App() {
               path="/"
               element={
                 <ProtectedRoute>
-                  <Layout />
+                  <MainLayout />
                 </ProtectedRoute>
               }
             >

@@ -37,7 +37,7 @@ export default function Login() {
             <Factory size={36} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center justify-center gap-2">
-            NeuroFlux <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30 font-black">v2.6-ULTRA-FORCE</span>
+            NeuroFlux <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30 font-black">v2.7-DEPLOY-FORCED</span>
           </h1>
           <p className="text-slate-400 text-sm mt-2">Sistema de Orçamentos Inteligentes</p>
         </div>
