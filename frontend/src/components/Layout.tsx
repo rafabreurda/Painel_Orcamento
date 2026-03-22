@@ -64,7 +64,7 @@ export default function Layout() {
             <div className="w-6 h-6 bg-primary-600 rounded-md flex items-center justify-center">
               <Factory size={12} className="text-white" />
             </div>
-            <span className="font-bold text-sm text-white">EUROMOLDES</span>
+            <span className="font-bold text-sm text-white">NeuroFlux</span>
           </div>
           <div className="w-9" />
         </header>
@@ -86,7 +86,7 @@ function SidebarContent({ user, nav, roleLabel, onLogout, onNavClick }: any) {
           <Factory size={18} className="text-white" />
         </div>
         <div>
-          <p className="font-bold text-sm text-white">EUROMOLDES</p>
+          <p className="font-bold text-sm text-white">NeuroFlux</p>
           <p className="text-[10px] text-slate-500">Mold Enterprise</p>
         </div>
       </div>

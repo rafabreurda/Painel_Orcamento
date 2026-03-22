@@ -167,8 +167,8 @@ export default function NewProject() {
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <Sparkles size={22} className="text-primary-400" />
-            Novo Orçamento Inteligente
-            <span className="text-[10px] bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded ml-2 border border-primary-500/30">v2.2-200%</span>
+            NeuroFlux Orçamentos
+            <span className="text-[10px] bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded ml-2 border border-primary-500/30">v2.3-final</span>
           </h1>
           <p className="text-slate-400 text-sm mt-1">
             Tire uma foto do produto — a IA detecta tudo automaticamente
