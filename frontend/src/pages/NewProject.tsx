@@ -21,6 +21,8 @@ interface FormData {
   pieceX: number; pieceY: number; pieceZ: number
   cavities: number; hasDrawers: boolean; drawerCount: number
   polishLevel: string; steelType: string
+  steelCavity: string; steelPunch: string
+  steelP1: string; steelP2: string
   heatTreatment: string; surfaceTexture: string
   riskMargin: number; profitMargin: number; taxRate: number
   injectionType: string; nozzleCount: number
@@ -38,6 +40,8 @@ export default function NewProject() {
     hasDrawers: false, drawerCount: 0,
     polishLevel: user?.defaultPolishLevel ?? 'STANDARD',
     steelType: user?.defaultSteelType ?? 'P20',
+    steelCavity: 'P20', steelPunch: 'P20',
+    steelP1: 'S1045', steelP2: 'S1045',
     heatTreatment: 'NONE',
     surfaceTexture: 'POLISHED',
     riskMargin: user?.defaultRiskMargin ?? 15,
@@ -280,13 +284,23 @@ export default function NewProject() {
                     onChange={e => set('nozzleCount', Number(e.target.value))} min={1} max={32} />
                 </div>
               )}
-              <div>
-                <label className="label">Material</label>
-                <select className="input" value={form.steelType} onChange={e => set('steelType', e.target.value)}>
-                  <option value="S1045">Aço 1045</option>
-                  <option value="P20">Aço P20</option>
-                  <option value="H13">Aço H13</option>
-                </select>
+              <div className="col-span-2">
+                <label className="label mb-1">Material por Placa</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    ['steelCavity', 'Cavidade (Fêmea)', ['S1045','P20','H13']],
+                    ['steelPunch',  'Macho (Punção)',   ['S1045','P20','H13']],
+                    ['steelP1',    'P1 (Fix. Superior)',['S1045','P20']],
+                    ['steelP2',    'P2 (Fix. Inferior)',['S1045','P20']],
+                  ] as [keyof FormData, string, string[]][]).map(([key, lbl, opts]) => (
+                    <div key={key}>
+                      <label className="label text-[10px]">{lbl}</label>
+                      <select className="input" value={form[key] as string} onChange={e => set(key, e.target.value)}>
+                        {opts.map(o => <option key={o} value={o}>{o === 'S1045' ? 'Aço 1045' : o === 'P20' ? 'Aço P20' : 'Aço H13'}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div>
                 <label className="label">Polimento</label>
