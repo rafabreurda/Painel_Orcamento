@@ -1,9 +1,8 @@
 import { FastifyInstance } from 'fastify'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma'
 import * as XLSX from 'xlsx'
 import { authenticate, requireAdmin } from '../middleware/auth'
 
-const prisma = new PrismaClient()
 
 // Preços reais mercado Brasil 2024/2025
 const DEFAULT_PRICING = [

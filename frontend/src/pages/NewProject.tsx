@@ -125,6 +125,10 @@ export default function NewProject() {
       toast('warning', 'Campos obrigatórios', 'Preencha o nome do projeto e do cliente.')
       return
     }
+    if (!form.pieceX || !form.pieceY || !form.pieceZ || form.pieceX <= 0 || form.pieceY <= 0 || form.pieceZ <= 0) {
+      toast('warning', 'Dimensões inválidas', 'Preencha as dimensões da peça (X, Y, Z) antes de salvar.')
+      return
+    }
     setSaving(true)
     try {
       const { data: res } = await api.post('/projects', form)
@@ -168,7 +172,6 @@ export default function NewProject() {
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <Sparkles size={22} className="text-primary-400" />
             NeuroFlux Orçamentos
-            <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded ml-2 border border-red-500/30 font-black animate-pulse">v2.7-DEPLOY-FORCED</span>
           </h1>
           <p className="text-slate-400 text-sm mt-1">
             Tire uma foto do produto — a IA detecta tudo automaticamente

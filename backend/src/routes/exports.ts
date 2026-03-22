@@ -1,10 +1,9 @@
 import { FastifyInstance } from 'fastify'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma'
 import { authenticate } from '../middleware/auth'
 import { calculateMold, calculateMoldDimensions, PolimoldEntry } from '../services/moldCalculator'
 
-const prisma = new PrismaClient()
 const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const NUM = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
 
@@ -170,7 +169,7 @@ export async function exportRoutes(app: FastifyInstance) {
     sectionHeader('3. DIMENSIONAMENTO ESTIMADO')
 
     row2('Dimensões da Peça Plástica:', `${NUM.format(project.pieceX)} × ${NUM.format(project.pieceY)} × ${NUM.format(project.pieceZ)} mm`)
-    row2('Dimensão do Porta-Molde:', `${Math.round(plates.topPlate.width)} × ${Math.round(plates.topPlate.length)} mm (Série ${project.pieceX < 80 ? '30' : project.pieceX < 150 ? '40' : '50'})`)
+    row2('Dimensão do Porta-Molde:', `${Math.round(plates.topPlate.width)} × ${Math.round(plates.topPlate.length)} mm (${result.polimoldSeries})`)
     row2('Altura Total Montado:', `${Math.round(plates.topPlate.height + plates.cavityPlate.height + plates.punchPlate.height + plates.spacerBlocks.height + plates.ejectorPlate.height + plates.bottomPlate.height)} mm (aprox.)`)
 
     y -= 4
@@ -213,22 +212,29 @@ export async function exportRoutes(app: FastifyInstance) {
     y -= 18
 
     // Build investment items matching Gemini format
+    // Itens do PDF usam valores reais do cálculo — somam exatamente ao result.total
     const matSteel      = result.materials.steel
     const matComponents = result.materials.pins + result.materials.springs + result.materials.columns
+    const matHotRunner  = result.materials.hotRunner
+    const matHeatTreat  = result.materials.heatTreatment
     const laborCNC      = result.labor.machining.cost
     const laborEDM      = result.labor.erosion.cost
-    const laborBench    = result.labor.bench.cost + result.labor.grinding.cost
-    const engValue      = result.labor.total * 0.12  // ~12% for engineering
-    const tryoutValue   = result.labor.total * 0.08  // ~8% for tryout
+    const laborBench    = result.labor.bench.cost
+    const laborGrind    = result.labor.grinding.cost
+    // Margens e impostos são exibidos no resumo financeiro, não nos itens
+    // Os itens cobrem o subtotal (materiais + MO) que é a base antes das margens
 
     const investmentRows: [string, string, number][] = [
-      ['Porta-Molde',    'Estrutura completa SAE 1045 usinada — todas as placas',       matSteel * 0.55],
+      ['Porta-Molde',    'Estrutura completa SAE 1045 usinada — todas as placas',           matSteel * 0.55],
       ['Insertos/Cav.',  `Blocos ${steelLabel.split('(')[0].trim()} + usinagem de precisão`, matSteel * 0.45 + matComponents * 0.3],
-      ['Componentes',    'Guias, colunas, buchas, pinos e molas — linha padrão',        matComponents * 0.7],
-      ['Extração',       'Pinos extratores tratados, réguas e sistema de atuação',      laborBench * 0.3],
-      ['Engenharia',     'Modelagem 3D, projeto do molde e programação CNC/CAM',        engValue],
-      ['Usinagem/Ajuste','CNC acabamento, eletroerosão (EDM) e ajuste de bancada',      laborCNC + laborEDM + laborBench * 0.7],
-      ['Try-out (T1)',   'Teste em injetora, amostras e ajustes finos',                 tryoutValue],
+      ['Componentes',    'Guias, colunas, buchas, pinos e molas — linha padrão',             matComponents * 0.7],
+      ...(matHotRunner > 0 ? [['Câmara Quente', 'Manifold + bicos de injeção aquecidos', matHotRunner] as [string, string, number]] : []),
+      ...(matHeatTreat > 0 ? [['Tratamento Térmico', 'Tratamento e retífica pós-tratamento', matHeatTreat + laborGrind] as [string, string, number]] : [
+        ['Retífica/Polimento', 'Retífica CNC plana e polimento superficial', laborGrind],
+      ] as [string, string, number][]),
+      ['Usinagem CNC',   'Fresamento 3 eixos — cavidades, canais e extração',               laborCNC],
+      ['Eletroerosão',   'EDM penetração + fio — acabamento de cavidades',                  laborEDM],
+      ['Bancada/Ajuste', 'Ajustagem, montagem e teste de encaixe',                          laborBench],
     ]
 
     investmentRows.forEach(([item, desc, val], i) => {

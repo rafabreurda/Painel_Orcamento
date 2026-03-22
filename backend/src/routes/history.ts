@@ -1,8 +1,7 @@
 import { FastifyInstance } from 'fastify'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma'
 import { authenticate } from '../middleware/auth'
 
-const prisma = new PrismaClient()
 
 export async function historyRoutes(app: FastifyInstance) {
   app.addHook('preHandler', authenticate)

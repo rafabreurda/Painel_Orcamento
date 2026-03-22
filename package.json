@@ -1,9 +1,9 @@
 {
   "name": "neuroflux-mold-enterprise",
-  "version": "1.2.6-force",
+  "version": "1.3.0",
   "private": true,
   "scripts": {
-    "vercel-build": "cd frontend && npm install && npm run build && cd ../backend && npm install && npx prisma generate"
+    "vercel-build": "cd frontend && npm install --include=dev && rm -rf dist node_modules/.vite && npm run build && cd ../backend && npm install --include=dev && npx prisma generate"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

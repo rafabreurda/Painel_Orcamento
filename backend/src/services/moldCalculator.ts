@@ -33,6 +33,9 @@ export interface MoldParams {
 
 export interface PricingData {
   hourlyRate: number   // R$/h CNC — padrão 185 (mercado SP 2024)
+  rateEDM?: number     // R$/h EDM — padrão 130
+  rateBench?: number   // R$/h bancada — padrão 95
+  rateGrind?: number   // R$/h retífica — padrão 110
   steelS1045: number  // R$/kg
   steelP20: number    // R$/kg
   steelH13: number    // R$/kg
@@ -223,6 +226,7 @@ function calcLaborHours(
   injectionType: string,
   nozzleCount: number,
   heatTreatment: string,
+  pricing: PricingData,
 ): LaborBreakdown {
   // Fator de complexidade geométrica da peça
   const vol = (piece.x * piece.y * piece.z) / 1_000  // cm³
@@ -270,11 +274,11 @@ function calcLaborHours(
 
   const round = (h: number) => Math.round(h * 2) / 2
 
-  // Taxas horárias reais Brasil 2024 (pesquisa Usinagem Brasil / GRV)
-  const CNC_RATE   = 185  // R$/h centro de usinagem 3-eixos SP
-  const EDM_RATE   = 130  // R$/h (estimado: operador × 2.2 overhead)
-  const BENCH_RATE = 95   // R$/h ajustador qualificado
-  const GRIND_RATE = 110  // R$/h retífica CNC plana
+  // Taxas horárias — usa valores do banco se configurados, senão usa defaults de mercado SP 2024
+  const CNC_RATE   = pricing.hourlyRate  ?? 185
+  const EDM_RATE   = pricing.rateEDM    ?? 130
+  const BENCH_RATE = pricing.rateBench  ?? 95
+  const GRIND_RATE = pricing.rateGrind  ?? 110
 
   const mH = round(cncBase)
   const eH = round(edmBase)
@@ -329,10 +333,10 @@ export function calculateMold(params: MoldParams & { catalog?: PolimoldEntry[] }
 
   // Material por placa (padrão Polimold)
   // Placa superior/inferior = 1045 (estrutural)
-  // Cavidade/macho = P20 ou H13 conforme parâmetro
+  // Cavidade/macho = H13, P20 ou S1045 conforme parâmetro
   // Calços = 1045
-  // Extratora = P20
-  const cavityMaterial = steelType === 'H13' ? 'H13' : 'P20'
+  // Extratora = mesmo material da cavidade (econômico para S1045)
+  const cavityMaterial = steelType === 'H13' ? 'H13' : steelType === 'S1045' ? 'S1045' : 'P20'
   const structMaterial = 'S1045'
 
   const plates: PlateStack = {
@@ -357,11 +361,13 @@ export function calculateMold(params: MoldParams & { catalog?: PolimoldEntry[] }
   )
   const totalSteelWeight = p20Weight + s1045Weight + (hasDrawers ? drawerCount * pieceSize.x * 0.08 : 0)
 
-  // 5. Custo de materiais
-  const steelCostP20   = (steelType === 'H13' ? 0 : p20Weight)  * pricing.steelP20
-  const steelCostH13   = (steelType === 'H13' ? p20Weight : 0)  * pricing.steelH13
+  // 5. Custo de materiais — cavidade usa preço correto do aço selecionado
+  const cavityWeight = p20Weight  // peso das placas de cavidade/macho/extratora
+  const steelCostCavity = steelType === 'H13'   ? cavityWeight * pricing.steelH13
+                        : steelType === 'S1045' ? cavityWeight * pricing.steelS1045
+                        :                         cavityWeight * pricing.steelP20
   const steelCostS1045 = s1045Weight * pricing.steelS1045
-  const steelCost = steelCostP20 + steelCostH13 + steelCostS1045
+  const steelCost = steelCostCavity + steelCostS1045
 
   // Componentes padrão Polimold (pinos, molas, colunas — valores catálogo 2024)
   const pinSetCost    = pricing.pinSet * cavities  // por cavidade
@@ -385,11 +391,12 @@ export function calculateMold(params: MoldParams & { catalog?: PolimoldEntry[] }
 
   const materialTotal = steelCost + pinSetCost + springCost + columnCost + hotRunnerCost + heatTreatCost
 
-  // 6. Mão de obra
+  // 6. Mão de obra — passa pricing para usar taxas do banco
   const labor = calcLaborHours(
     pieceSize, cavities, polishLevel, steelType,
     hasDrawers, drawerCount, series,
     injectionType, nozzleCount, heatTreatment,
+    pricing,
   )
 
   // 7. Resumo financeiro

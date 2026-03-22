@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma'
 import { createClient } from '@supabase/supabase-js'
 import path from 'path'
 import { authenticate } from '../middleware/auth'
@@ -11,7 +11,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 )
 
-const prisma = new PrismaClient()
 
 const VALID_STATUSES = ['PENDING', 'IN_PRODUCTION', 'DELIVERED', 'CANCELLED'] as const
 

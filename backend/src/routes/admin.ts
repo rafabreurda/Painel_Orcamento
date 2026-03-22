@@ -1,10 +1,9 @@
 import { FastifyInstance } from 'fastify'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma'
 import { authenticate, requireAdmin } from '../middleware/auth'
 
-const prisma = new PrismaClient()
 
 const AVATAR_COLORS = [
   '#3b82f6', '#8b5cf6', '#06b6d4', '#10b981',

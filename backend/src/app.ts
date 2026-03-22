@@ -26,7 +26,8 @@ export function buildApp(): FastifyInstance {
   app.register(cors, {
     origin: (origin, cb) => {
       if (!origin) return cb(null, true) // server-to-server
-      if (origins.some(o => origin.startsWith(o)) || origin.includes('vercel.app')) {
+      const prodOrigin = process.env.PRODUCTION_FRONTEND_URL
+      if (origins.some(o => origin === o) || (prodOrigin && origin === prodOrigin)) {
         return cb(null, true)
       }
       cb(new Error('Not allowed by CORS'), false)
@@ -34,8 +35,11 @@ export function buildApp(): FastifyInstance {
     credentials: true,
   })
 
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET env var is required')
+  }
   app.register(jwt, {
-    secret: process.env.JWT_SECRET || 'euromoldes-secret-2024',
+    secret: process.env.JWT_SECRET,
   })
 
   app.register(multipart, {

@@ -1,8 +1,7 @@
 import { FastifyInstance } from 'fastify'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma'
 import { authenticate, requireAdmin } from '../middleware/auth'
 
-const prisma = new PrismaClient()
 
 const DEFAULTS: Record<string, any> = {
   PAYMENT_TERMS: [

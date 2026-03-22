@@ -54,12 +54,18 @@ export default function AdminPanel() {
   const [modal, setModal] = useState<'create' | 'edit' | 'config' | null>(null)
   const [selected, setSelected] = useState<AdminUser | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<AdminUser | null>(null)
 
   async function load() {
+    try {
     const [u, s] = await Promise.all([api.get('/admin/users'), api.get('/admin/stats')])
-    setUsers(u.data)
-    setStats(s.data)
-    setLoading(false)
+      setUsers(u.data)
+      setStats(s.data)
+    } catch (err) {
+      console.error('Erro ao carregar admin:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { load() }, [])
@@ -70,11 +76,21 @@ export default function AdminPanel() {
   }
 
   async function handleDelete(u: AdminUser) {
-    if (!confirm(`Remover "${u.name}"? Se tiver projetos, será apenas desativado.`)) return
-    setDeleting(u.id)
-    await api.delete(`/admin/users/${u.id}`)
-    await load()
-    setDeleting(null)
+    setConfirmDelete(u)
+  }
+
+  async function confirmDeleteUser() {
+    if (!confirmDelete) return
+    setDeleting(confirmDelete.id)
+    try {
+      await api.delete(`/admin/users/${confirmDelete.id}`)
+      await load()
+    } catch (err) {
+      console.error('Erro ao excluir usuário:', err)
+    } finally {
+      setDeleting(null)
+      setConfirmDelete(null)
+    }
   }
 
   if (loading) return (
@@ -208,6 +224,35 @@ export default function AdminPanel() {
           onClose={() => setModal(null)}
           onSave={async () => { await load(); setModal(null) }}
         />
+      )}
+
+      {/* Confirm Delete Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="card max-w-sm w-full border border-red-500/30">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+                <Trash2 size={18} className="text-red-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white">Remover usuário?</h3>
+                <p className="text-slate-400 text-sm">{confirmDelete.name}</p>
+              </div>
+            </div>
+            <p className="text-slate-400 text-sm mb-4">
+              {confirmDelete._count.projects > 0
+                ? `Este usuário tem ${confirmDelete._count.projects} projeto(s) e será apenas desativado.`
+                : 'Esta ação é irreversível.'}
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDelete(null)} className="btn-ghost flex-1 justify-center">Cancelar</button>
+              <button onClick={confirmDeleteUser} disabled={!!deleting} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors disabled:opacity-50">
+                {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                {confirmDelete._count.projects > 0 ? 'Desativar' : 'Remover'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
