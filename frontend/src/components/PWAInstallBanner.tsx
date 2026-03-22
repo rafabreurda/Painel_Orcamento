@@ -16,7 +16,7 @@ export function PWAInstallBanner() {
         <Smartphone className="w-5 h-5 text-white" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-white font-semibold text-sm">Instalar NeuroFlux Mold</p>
+        <p className="text-white font-semibold text-sm">Instalar NeuroFlux Interprice</p>
         <p className="text-blue-200 text-xs mt-0.5">Acesso rápido, funciona offline</p>
       </div>
       <button

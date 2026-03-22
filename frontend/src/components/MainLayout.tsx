@@ -87,7 +87,7 @@ function SidebarContent({ user, nav, roleLabel, onLogout, onNavClick }: any) {
         </div>
         <div>
           <p className="font-bold text-sm text-white">NeuroFlux</p>
-          <p className="text-[10px] text-slate-500">Mold Enterprise</p>
+          <p className="text-[10px] text-slate-500">Interprice</p>
         </div>
       </div>
 

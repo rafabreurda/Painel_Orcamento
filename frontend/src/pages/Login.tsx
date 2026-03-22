@@ -39,7 +39,7 @@ export default function Login() {
           <h1 className="text-3xl font-bold text-white tracking-tight">
             NeuroFlux
           </h1>
-          <p className="text-slate-400 text-sm mt-2">Sistema de Orçamentos Inteligentes</p>
+          <p className="text-slate-400 text-sm mt-2">NeuroFlux Interprice</p>
         </div>
 
         <div className="card shadow-2xl border-slate-700/80">
@@ -98,7 +98,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-xs text-slate-600 mt-6">
-          © {new Date().getFullYear()} NeuroFlux · Mold Enterprise
+          © {new Date().getFullYear()} NeuroFlux · Interprice
         </p>
       </div>
     </div>
