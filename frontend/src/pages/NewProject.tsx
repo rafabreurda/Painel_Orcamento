@@ -91,6 +91,9 @@ export default function NewProject() {
   }
 
   function applyAnalysis(a: MoldAnalysis, imgUrl: string) {
+    if (!a) return
+    console.log('[NeuroFlux] AI Analysis:', a)
+    
     setAnalysis(a)
     setImagePreview(imgUrl)
     // REMOVIDO: setActiveTab('3d') — O usuário deve clicar manualmente para evitar travamentos
@@ -98,18 +101,21 @@ export default function NewProject() {
     setForm(prev => {
       const next: FormData = {
         ...prev,
-        pieceX: a.estimatedDimensions.x,
-        pieceY: a.estimatedDimensions.y,
-        pieceZ: a.estimatedDimensions.z,
-        cavities: a.suggestedCavities,
-        hasDrawers: a.needsDrawers,
-        drawerCount: a.drawerCount,
-        steelType: a.suggestedSteel,
-        polishLevel: a.suggestedPolish,
-        injectionType: a.injectionType,
-        nozzleCount: a.nozzleCount,
+        pieceX: a.estimatedDimensions?.x || prev.pieceX,
+        pieceY: a.estimatedDimensions?.y || prev.pieceY,
+        pieceZ: a.estimatedDimensions?.z || prev.pieceZ,
+        cavities: a.suggestedCavities || prev.cavities,
+        hasDrawers: !!a.needsDrawers,
+        drawerCount: a.drawerCount || 0,
+        steelType: a.suggestedSteel || prev.steelType,
+        polishLevel: a.suggestedPolish || prev.polishLevel,
+        injectionType: a.injectionType || prev.injectionType,
+        nozzleCount: a.nozzleCount || 0,
       }
-      setTimeout(() => runCalc(next), 0)
+      // Garantir que não chamamos cálculo com dimensões zeradas (crash prevention)
+      if (next.pieceX > 0 && next.pieceY > 0 && next.pieceZ > 0) {
+        setTimeout(() => runCalc(next), 0)
+      }
       return next
     })
   }
@@ -162,6 +168,7 @@ export default function NewProject() {
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <Sparkles size={22} className="text-primary-400" />
             Novo Orçamento Inteligente
+            <span className="text-[10px] bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded ml-2 border border-primary-500/30">v2.2-200%</span>
           </h1>
           <p className="text-slate-400 text-sm mt-1">
             Tire uma foto do produto — a IA detecta tudo automaticamente

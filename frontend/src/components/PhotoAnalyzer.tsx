@@ -74,6 +74,9 @@ export default function PhotoAnalyzer({ onAnalysis }: Props) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
     setIsScannerOpen(false)
     setCameraLoading(false)
   }
@@ -151,8 +154,14 @@ export default function PhotoAnalyzer({ onAnalysis }: Props) {
       setStepIdx(STEPS.length - 1)
       await new Promise(r => setTimeout(r, 500))
       setDone(true)
-      onAnalysisRef.current(data.analysis, imageUrl)
+
+      if (data?.analysis && onAnalysisRef.current) {
+        onAnalysisRef.current(data.analysis, imageUrl)
+      } else {
+        throw new Error('Análise incompleta retornada pela IA')
+      }
     } catch (e: any) {
+      console.error('[Analyzer] Error:', e)
       if (e.response?.status === 413) {
         setError('Imagem muito grande. Use o modo Scanner para melhor resultado.')
       } else if (e.code === 'ECONNABORTED') {
