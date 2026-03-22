@@ -17,17 +17,15 @@ export function buildApp(): FastifyInstance {
     logger: process.env.NODE_ENV !== 'production',
   })
 
-  const origins = [
-    'http://localhost:5173',
-    'http://localhost:4173',
-    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
-  ]
-
   app.register(cors, {
     origin: (origin, cb) => {
-      if (!origin) return cb(null, true) // server-to-server
-      const prodOrigin = process.env.PRODUCTION_FRONTEND_URL
-      if (origins.some(o => origin === o) || (prodOrigin && origin === prodOrigin)) {
+      if (!origin) return cb(null, true) // server-to-server / curl
+      // Allow localhost (dev) and any Vercel deployment of this project
+      if (
+        origin.startsWith('http://localhost') ||
+        origin.endsWith('.vercel.app') ||
+        origin === process.env.PRODUCTION_FRONTEND_URL
+      ) {
         return cb(null, true)
       }
       cb(new Error('Not allowed by CORS'), false)
