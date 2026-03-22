@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '@/lib/api'
 import { BRL, NUM } from '@/lib/utils'
@@ -55,6 +55,16 @@ export default function NewProject() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [activeTab, setActiveTab] = useState<'diagram' | 'open' | '3d' | 'calc'>('diagram')
   const debounce = useRef<any>(null)
+
+  // Memória 200%: Limpa URLs de Blob ao trocar imagem ou sair da página
+  useEffect(() => {
+    const current = imagePreview
+    return () => {
+      if (current && current.startsWith('blob:')) {
+        URL.revokeObjectURL(current)
+      }
+    }
+  }, [imagePreview])
 
   const plates = form.pieceX && form.pieceY && form.pieceZ
     ? calculateMoldDimensions({ x: form.pieceX, y: form.pieceY, z: form.pieceZ }, form.cavities)
